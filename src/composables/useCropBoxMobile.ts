@@ -327,26 +327,35 @@ export function useCropBoxMobile() {
     const imageAspectRatio = store.image.width / store.image.height
     const containerAspectRatio = 1 // 正方形容器
     
-    let cropWidth, cropHeight
+    let imageDisplayWidth, imageDisplayHeight, offsetX, offsetY
     
     if (imageAspectRatio > containerAspectRatio) {
-      // 图片更宽，以高度为准
-      cropHeight = Math.floor(containerSize * 0.8)
-      cropWidth = Math.floor(cropHeight * imageAspectRatio)
+      // 图片更宽，以容器宽度为准
+      imageDisplayWidth = containerSize
+      imageDisplayHeight = containerSize / imageAspectRatio
+      offsetX = 0
+      offsetY = (containerSize - imageDisplayHeight) / 2
     } else {
-      // 图片更高，以宽度为准
-      cropWidth = Math.floor(containerSize * 0.8)
-      cropHeight = Math.floor(cropWidth / imageAspectRatio)
+      // 图片更高，以容器高度为准
+      imageDisplayHeight = containerSize
+      imageDisplayWidth = containerSize * imageAspectRatio
+      offsetX = (containerSize - imageDisplayWidth) / 2
+      offsetY = 0
     }
     
-    // 确保不超出容器
-    cropWidth = Math.min(cropWidth, containerSize - 20)
-    cropHeight = Math.min(cropHeight, containerSize - 20)
+    // 设置裁剪框紧贴图片边缘，留出2px边距确保可见性
+    const margin = 2
+    const cropX = Math.max(0, offsetX + margin)
+    const cropY = Math.max(0, offsetY + margin)
+    const cropWidth = Math.max(minSize, imageDisplayWidth - margin * 2)
+    const cropHeight = Math.max(minSize, imageDisplayHeight - margin * 2)
     
-    const x = Math.floor((containerSize - cropWidth) / 2)
-    const y = Math.floor((containerSize - cropHeight) / 2)
-    
-    store.updateCropBox({ x, y, width: cropWidth, height: cropHeight })
+    store.updateCropBox({ 
+      x: cropX, 
+      y: cropY, 
+      width: cropWidth, 
+      height: cropHeight 
+    })
   }
 
   // 计算属性

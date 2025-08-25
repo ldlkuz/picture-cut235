@@ -7,6 +7,8 @@ export function useImageProcessor() {
   const isProcessing = ref(false)
   const processingProgress = ref(0)
   const processingStatus = ref('')
+  const processingType = ref<'upload' | 'processing' | 'compression' | 'download' | 'error'>('processing')
+  const processingDetails = ref('')
 
   /**
    * 创建Canvas元素
@@ -132,8 +134,21 @@ export function useImageProcessor() {
   const cropImageFree = async (cropBox: CropBox): Promise<string> => {
     if (!store.image.url) throw new Error('没有图片可以裁剪')
     
-    const sourceCanvas = await loadImageToCanvas(store.image.url)
-    const filteredCanvas = applyFilter(sourceCanvas, store.currentFilterConfig)
+    try {
+      isProcessing.value = true
+      processingType.value = 'processing'
+      processingStatus.value = '正在加载图片...'
+      processingProgress.value = 10
+      
+      const sourceCanvas = await loadImageToCanvas(store.image.url)
+      
+      processingStatus.value = '正在应用滤镜...'
+      processingProgress.value = 30
+      
+      const filteredCanvas = applyFilter(sourceCanvas, store.currentFilterConfig)
+      
+      processingStatus.value = '正在计算裁剪区域...'
+      processingProgress.value = 50
     
     // 获取图片在预览容器中的实际显示信息
     const displayInfo = getImageDisplayInfo()
@@ -169,25 +184,44 @@ export function useImageProcessor() {
       }
     })
     
-    // 创建裁剪后的Canvas
-    const croppedCanvas = createCanvas(actualCropBox.width, actualCropBox.height)
-    const ctx = croppedCanvas.getContext('2d')
-    
-    if (!ctx) throw new Error('无法获取Canvas上下文')
-    
-    ctx.drawImage(
-      filteredCanvas,
-      actualCropBox.x,
-      actualCropBox.y,
-      actualCropBox.width,
-      actualCropBox.height,
-      0,
-      0,
-      actualCropBox.width,
-      actualCropBox.height
-    )
-    
-    return croppedCanvas.toDataURL('image/png', 0.9)
+      // 创建裁剪后的Canvas
+      processingStatus.value = '正在裁剪图片...'
+      processingProgress.value = 70
+      
+      const croppedCanvas = createCanvas(actualCropBox.width, actualCropBox.height)
+      const ctx = croppedCanvas.getContext('2d')
+      
+      if (!ctx) throw new Error('无法获取Canvas上下文')
+      
+      ctx.drawImage(
+        filteredCanvas,
+        actualCropBox.x,
+        actualCropBox.y,
+        actualCropBox.width,
+        actualCropBox.height,
+        0,
+        0,
+        actualCropBox.width,
+        actualCropBox.height
+      )
+      
+      processingStatus.value = '正在生成图片...'
+      processingProgress.value = 90
+      
+      const result = croppedCanvas.toDataURL('image/png', 0.9)
+      
+      processingProgress.value = 100
+      processingStatus.value = '裁剪完成！'
+      
+      return result
+    } finally {
+      setTimeout(() => {
+        isProcessing.value = false
+        processingProgress.value = 0
+        processingStatus.value = ''
+        processingDetails.value = ''
+      }, 1000)
+    }
   }
 
   /**
@@ -196,8 +230,15 @@ export function useImageProcessor() {
   const createGridPuzzle = async (gridConfig: GridConfig, parameters: Parameters, cropBox?: CropBox): Promise<string> => {
     if (!store.image.url) throw new Error('没有图片可以裁剪')
     
-    // 参数验证和处理
-    console.log('🎯 createGridPuzzle - 函数开始执行')
+    try {
+      isProcessing.value = true
+      processingType.value = 'processing'
+      processingStatus.value = '正在准备网格拼图...'
+      processingProgress.value = 5
+      processingDetails.value = `生成 ${gridConfig.rows}x${gridConfig.cols} 网格`
+      
+      // 参数验证和处理
+      console.log('🎯 createGridPuzzle - 函数开始执行')
     console.log('🎯 createGridPuzzle - 接收到的原始参数:', {
       borderWidth: parameters.borderWidth,
       borderColor: parameters.borderColor
@@ -217,17 +258,30 @@ export function useImageProcessor() {
     
     console.log('🎯 createGridPuzzle - 验证后的原始参数:', originalParams)
     
-    const sourceCanvas = await loadImageToCanvas(store.image.url)
-    const filteredCanvas = applyFilter(sourceCanvas, store.currentFilterConfig)
+      processingStatus.value = '正在加载图片...'
+      processingProgress.value = 15
+      
+      const sourceCanvas = await loadImageToCanvas(store.image.url)
+      
+      processingStatus.value = '正在应用滤镜...'
+      processingProgress.value = 25
+      
+      const filteredCanvas = applyFilter(sourceCanvas, store.currentFilterConfig)
     
-    // 获取图片在预览容器中的实际显示信息（用于缩放比例计算）
-    const displayInfo = getImageDisplayInfo()
+      // 获取图片在预览容器中的实际显示信息（用于缩放比例计算）
+      processingStatus.value = '正在计算显示信息...'
+      processingProgress.value = 35
+      
+      const displayInfo = getImageDisplayInfo()
     
-    // 如果提供了裁剪框，先裁剪图片
-    let targetCanvas = filteredCanvas
-    let scaleRatio = 1 // 默认缩放比例
-    
-    if (cropBox) {
+      // 如果提供了裁剪框，先裁剪图片
+      processingStatus.value = '正在处理裁剪区域...'
+      processingProgress.value = 45
+      
+      let targetCanvas = filteredCanvas
+      let scaleRatio = 1 // 默认缩放比例
+      
+      if (cropBox) {
       
       // 将裁剪框坐标从容器坐标系转换为图片坐标系
       const relativeX = cropBox.x - displayInfo.offsetX
@@ -296,16 +350,22 @@ export function useImageProcessor() {
       调整说明: `borderWidth: ${originalParams.borderWidth} * ${scaleRatio.toFixed(3)} = ${adjustedParams.borderWidth.toFixed(1)}`
     })
     
-    const { rows, cols } = gridConfig
-    
-    // 创建带网格的Canvas
-    const gridCanvas = createCanvas(targetCanvas.width, targetCanvas.height)
-    const ctx = gridCanvas.getContext('2d')
-    
-    if (!ctx) throw new Error('无法获取Canvas上下文')
-    
-    // 绘制背景图片
-    ctx.drawImage(targetCanvas, 0, 0)
+      const { rows, cols } = gridConfig
+      
+      processingStatus.value = '正在创建网格画布...'
+      processingProgress.value = 60
+      
+      // 创建带网格的Canvas
+      const gridCanvas = createCanvas(targetCanvas.width, targetCanvas.height)
+      const ctx = gridCanvas.getContext('2d')
+      
+      if (!ctx) throw new Error('无法获取Canvas上下文')
+      
+      // 绘制背景图片
+      ctx.drawImage(targetCanvas, 0, 0)
+      
+      processingStatus.value = '正在绘制网格线...'
+      processingProgress.value = 70
     
     // 新的网格计算逻辑：去掉外围边距，将整个图片平均分割
     // 计算每个网格单元的尺寸（整个图片平均分割）
@@ -347,9 +407,9 @@ export function useImageProcessor() {
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     
-    // 绘制垂直网格线（居中膨胀效果）
-    console.log('🖌️ createGridPuzzle - 开始绘制垂直网格线，共', cols - 1, '条（居中膨胀效果）')
-    for (let i = 1; i < cols; i++) {
+      // 绘制垂直网格线（居中膨胀效果）
+      console.log('🖌️ createGridPuzzle - 开始绘制垂直网格线，共', cols - 1, '条（居中膨胀效果）')
+      for (let i = 1; i < cols; i++) {
       const centerX = i * cellWidth
       const halfWidth = lineWidth / 2
       
@@ -365,9 +425,12 @@ export function useImageProcessor() {
       console.log(`🖌️ 垂直线 ${i}: centerX = ${centerX}, 绘制范围 ${centerX - halfWidth} 到 ${centerX + halfWidth}`)
     }
     
-    // 绘制水平网格线（居中膨胀效果）
-    console.log('🖌️ createGridPuzzle - 开始绘制水平网格线，共', rows - 1, '条（居中膨胀效果）')
-    for (let i = 1; i < rows; i++) {
+      processingStatus.value = '正在绘制水平网格线...'
+      processingProgress.value = 85
+      
+      // 绘制水平网格线（居中膨胀效果）
+      console.log('🖌️ createGridPuzzle - 开始绘制水平网格线，共', rows - 1, '条（居中膨胀效果）')
+      for (let i = 1; i < rows; i++) {
       const centerY = i * cellHeight
       const halfWidth = lineWidth / 2
       
@@ -382,10 +445,24 @@ export function useImageProcessor() {
       
       console.log(`🖌️ 水平线 ${i}: centerY = ${centerY}, 绘制范围 ${centerY - halfWidth} 到 ${centerY + halfWidth}`)
     }
-    
-
-    
-    return gridCanvas.toDataURL('image/png', 0.9)
+      
+      processingStatus.value = '正在生成最终图片...'
+      processingProgress.value = 95
+      
+      const result = gridCanvas.toDataURL('image/png', 0.9)
+      
+      processingProgress.value = 100
+      processingStatus.value = '网格拼图生成完成！'
+      
+      return result
+    } finally {
+      setTimeout(() => {
+        isProcessing.value = false
+        processingProgress.value = 0
+        processingStatus.value = ''
+        processingDetails.value = ''
+      }, 1500)
+    }
   }
 
   /**
@@ -462,12 +539,14 @@ export function useImageProcessor() {
   const downloadCompletePuzzle = async () => {
     try {
       isProcessing.value = true
+      processingType.value = 'download'
       processingStatus.value = '正在生成网格拼图...'
-      processingProgress.value = 50
+      processingProgress.value = 20
+      processingDetails.value = '准备下载文件'
       
       const dataUrl = await createCompletePuzzle()
       
-      processingStatus.value = '正在下载...'
+      processingStatus.value = '正在准备下载...'
       processingProgress.value = 90
       
       // 直接下载到电脑
@@ -475,16 +554,20 @@ export function useImageProcessor() {
       
       processingProgress.value = 100
       processingStatus.value = '下载成功！'
+      processingDetails.value = '文件已保存到下载文件夹'
       
     } catch (error) {
       console.error('下载网格拼图失败:', error)
+      processingStatus.value = '下载失败'
+      processingDetails.value = error instanceof Error ? error.message : '未知错误'
       throw error
     } finally {
       setTimeout(() => {
         isProcessing.value = false
         processingProgress.value = 0
         processingStatus.value = ''
-      }, 1000)
+        processingDetails.value = ''
+      }, 2000)
     }
   }
 
@@ -494,6 +577,8 @@ export function useImageProcessor() {
     isProcessing,
     processingProgress,
     processingStatus,
+    processingType,
+    processingDetails,
     downloadCompletePuzzle,
     cropImageFree,
     createGridPuzzle,

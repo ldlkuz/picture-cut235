@@ -106,6 +106,119 @@ npm run build
 npm run preview
 ```
 
+## 🌐 部署指南
+
+### 🐳 Docker 一键部署（推荐）
+
+项目已配置完整的 Docker 部署方案，支持一键部署：
+
+#### 快速启动
+
+```bash
+# 1. 克隆项目
+git clone <repository-url>
+cd PICCUT
+
+# 2. 一键启动（生产环境）
+docker-compose up -d
+
+# 3. 访问应用
+# 浏览器打开 http://localhost
+```
+
+#### 开发环境
+
+```bash
+# 启动开发环境（支持热重载）
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# 访问开发服务器
+# 浏览器打开 http://localhost:5173
+```
+
+#### Docker 部署特性
+
+- **多阶段构建**：优化镜像大小，提高构建效率
+- **Nginx 优化**：生产级 Nginx 配置，支持 gzip 压缩和缓存
+- **安全配置**：非 root 用户运行，安全头配置
+- **健康检查**：自动监控应用状态
+- **SPA 路由支持**：完美支持 Vue Router 路由
+- **日志管理**：持久化日志存储
+
+#### 自定义配置
+
+```bash
+# 自定义端口
+docker-compose up -d
+# 然后编辑 docker-compose.yml 中的端口映射
+
+# 查看日志
+docker-compose logs -f piccut
+
+# 停止服务
+docker-compose down
+
+# 重新构建
+docker-compose build --no-cache
+```
+
+#### 生产环境建议
+
+```bash
+# 1. 设置环境变量
+export NODE_ENV=production
+
+# 2. 使用生产配置启动
+docker-compose -f docker-compose.yml up -d
+
+# 3. 配置反向代理（可选）
+# 如使用 Traefik、Nginx Proxy Manager 等
+```
+
+### GitHub Pages 部署
+
+项目已配置自动部署到 GitHub Pages：
+
+1. **推送到主分支**
+```bash
+git push origin main
+```
+
+2. **自动构建**
+   - GitHub Actions 会自动触发构建流程
+   - 构建完成后自动部署到 GitHub Pages
+   - 访问地址：`https://[username].github.io/[repository-name]`
+
+### Vercel 部署
+
+项目已配置 Vercel 部署：
+
+1. **连接 GitHub 仓库**
+   - 在 Vercel 控制台导入 GitHub 项目
+   - 选择本仓库进行部署
+
+2. **自动部署**
+   - 每次推送到主分支会自动触发部署
+   - 支持预览部署和生产部署
+   - 获得自定义域名和 HTTPS 支持
+
+### 传统部署
+
+如需手动部署到其他平台：
+
+```bash
+# 1. 构建项目
+npm run build
+
+# 2. dist 目录包含所有静态文件
+# 3. 将 dist 目录内容上传到您的服务器
+```
+
+**注意事项：**
+- 确保服务器支持 SPA（单页应用）路由
+- 配置服务器将所有路由重定向到 `index.html`
+- 建议启用 gzip 压缩以提高加载速度
+
 ## 📖 使用说明
 
 ### 基本操作流程

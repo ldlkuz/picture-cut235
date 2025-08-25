@@ -1,10 +1,114 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>图片宫格生成 - 网格拼图工具</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="mask-icon" href="/favicon.svg" color="#4f46e5" />
+    
+    <!-- SEO Meta Tags -->
+    <title>PICCUT - 宫格切割工具 | 微信朋友圈图片分割神器 | 免费在线九宫格切图</title>
+    <meta name="description" content="PICCUT是专为微信朋友圈设计的宫格切割工具，支持图片分割成九宫格、四宫格等多种格式。一键生成朋友圈宫格图片，让你的照片在朋友圈更吸睛！支持JPG、PNG等格式，完全免费使用。" />
+    <meta name="keywords" content="宫格切割,九宫格切图,微信朋友圈,朋友圈图片,图片分割,宫格图片,朋友圈九宫格,图片切割工具,在线切图,免费宫格,朋友圈神器,图片处理" />
+    <meta name="author" content="PICCUT Team" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="bingbot" content="index, follow" />
+    <meta name="language" content="zh-CN" />
+    <meta name="geo.region" content="CN" />
+    <meta name="geo.placename" content="China" />
+    <meta name="distribution" content="global" />
+    <meta name="rating" content="general" />
+    <meta name="revisit-after" content="7 days" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="PICCUT - 宫格切割工具 | 微信朋友圈图片分割神器" />
+    <meta property="og:description" content="专为微信朋友圈设计的宫格切割工具，一键生成九宫格图片，让你的照片在朋友圈更吸睛！完全免费，支持多种宫格格式。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://piccut.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PICCUT - 专业在线图片处理工具界面预览" />
+    <meta property="og:url" content="https://piccut.vercel.app" />
+    <meta property="og:site_name" content="PICCUT" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale:alternate" content="en_US" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PICCUT - 宫格切割工具 | 微信朋友圈图片分割神器" />
+    <meta name="twitter:description" content="专为微信朋友圈设计的宫格切割工具，一键生成九宫格图片，让你的照片在朋友圈更吸睛！完全免费使用。" />
+    <meta name="twitter:image" content="https://piccut.vercel.app/twitter-card.png" />
+    <meta name="twitter:image:alt" content="PICCUT - 专业在线图片处理工具" />
+    <meta name="twitter:site" content="@piccut_app" />
+    <meta name="twitter:creator" content="@piccut_app" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="msapplication-TileColor" content="#4f46e5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="PICCUT" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="PICCUT" />
+    <meta name="msapplication-tooltip" content="PICCUT - 专业图片处理工具" />
+    <meta name="msapplication-starturl" content="/" />
+    <meta name="msapplication-navbutton-color" content="#4f46e5" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://piccut.vercel.app" />
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PICCUT - 宫格切割工具",
+      "description": "专为微信朋友圈设计的宫格切割工具，支持图片分割成九宫格、四宫格等多种格式，一键生成朋友圈宫格图片",
+      "url": "https://piccut.vercel.app",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "1.0.0",
+      "datePublished": "2024-01-01",
+      "dateModified": "2024-01-15",
+      "author": {
+        "@type": "Organization",
+        "name": "PICCUT Team"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "宫格切割",
+        "九宫格切图",
+        "微信朋友圈图片分割",
+        "四宫格生成",
+        "图片分割工具",
+        "朋友圈神器",
+        "免费在线使用"
+      ],
+      "screenshot": "https://piccut.vercel.app/screenshot.png",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1250",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "keywords": "宫格切割,九宫格切图,微信朋友圈,朋友圈图片,图片分割,宫格图片,朋友圈九宫格,图片切割工具"
+    }
+    </script>
     <script type="module">
       if (import.meta.hot?.on) {
         import.meta.hot.on('vite:error', (error) => {

@@ -6,10 +6,23 @@ import { useImageProcessor } from '@/composables/useImageProcessor'
 import { useCropBoxMobile } from '@/composables/useCropBoxMobile'
 import { useCropBoxDesktop } from '@/composables/useCropBoxDesktop'
 import { Upload, Download, X, Loader2, ChevronDown, ChevronUp, Grid3x3, Settings, Palette } from 'lucide-vue-next'
+import ProgressIndicator from '@/components/ProgressIndicator.vue'
+import { ShareButton } from '@/components'
 
 const store = usePicCutStore()
-const { isUploading, uploadError, handleFileSelect, handleDrop, handleDragOver, clearImage } = useImageUpload()
-const { isProcessing, processingProgress, processingStatus, downloadCompletePuzzle } = useImageProcessor()
+const { 
+  isUploading, 
+  uploadError, 
+  compressionEnabled,
+  isOptimizing,
+  optimizationProgress,
+  handleFileSelect, 
+  handleDrop, 
+  handleDragOver, 
+  clearImage,
+  toggleCompression
+} = useImageUpload()
+const { isProcessing, processingProgress, processingStatus, processingType, processingDetails, downloadCompletePuzzle } = useImageProcessor()
 // 手机端裁剪框
 const {
   isDragging: isDraggingMobile,
@@ -71,10 +84,13 @@ const triggerFileSelect = () => {
 // 监听图片变化，自动调整裁剪框
 watch(() => store.hasImage, (hasImage) => {
   if (hasImage) {
-    // 图片上传后自动显示裁剪区域
+    // 图片上传后自动显示裁剪区域，根据设备类型调用对应的方法
     setTimeout(() => {
-      adjustCropBoxToImageMobile()
-      adjustCropBoxToImageDesktop()
+      if (isMobile.value) {
+        adjustCropBoxToImageMobile()
+      } else {
+        adjustCropBoxToImageDesktop()
+      }
     }, 100)
   }
 })
@@ -305,8 +321,17 @@ onUnmounted(() => {
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col">
     <!-- 头部标题 -->
     <header class="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg px-4 py-4">
-      <div class="flex items-center">
-        <h1 class="text-xl font-bold text-white">图片宫格生成</h1>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">PC</span>
+          </div>
+          <h1 class="text-xl font-bold text-white">PICCUT</h1>
+          <span class="hidden sm:inline text-white/80 text-sm">宫格切割神器</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <ShareButton />
+        </div>
       </div>
     </header>
 
@@ -322,17 +347,30 @@ onUnmounted(() => {
                 @dragover="handleDragOver"
            >
              <Upload class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-             <h3 class="text-lg font-medium text-gray-900 mb-2">上传图片</h3>
-             <p class="text-sm text-gray-600 mb-4">支持 JPG、PNG、GIF、WebP 格式</p>
-             <p class="text-xs text-gray-500 mb-4">拖拽图片到此处或点击选择文件</p>
+             <h3 class="text-lg font-medium text-gray-900 mb-2">上传图片制作宫格</h3>
+             <p class="text-sm text-gray-600 mb-4">一键生成九宫格、四宫格，完美适配微信朋友圈</p>
+             <p class="text-xs text-gray-500 mb-4">支持 JPG、PNG、GIF、WebP 格式，拖拽图片到此处或点击选择文件</p>
              
              <button 
                @click="triggerFileSelect"
-               :disabled="isUploading"
+               :disabled="isUploading || isOptimizing"
                class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium"
              >
-               {{ isUploading ? '上传中...' : '选择图片' }}
+               {{ isUploading ? '上传中...' : isOptimizing ? '压缩中...' : '选择图片' }}
              </button>
+             
+             <!-- 压缩选项 -->
+             <div class="mt-4 flex items-center justify-center gap-2">
+               <input 
+                 id="compression-toggle"
+                 type="checkbox" 
+                 v-model="compressionEnabled"
+                 class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+               />
+               <label for="compression-toggle" class="text-sm text-gray-600">
+                 启用智能压缩 (推荐)
+               </label>
+             </div>
              
              <!-- 隐藏的文件输入 -->
              <input
@@ -346,6 +384,16 @@ onUnmounted(() => {
              <!-- 错误提示 -->
              <div v-if="uploadError" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                <p class="text-sm text-red-600">{{ uploadError }}</p>
+             </div>
+             
+             <!-- 上传进度 -->
+             <div v-if="isUploading && !isOptimizing" class="mt-4">
+               <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                 <span>正在上传图片...</span>
+               </div>
+               <div class="w-full bg-gray-200 rounded-full h-2">
+                 <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300 animate-pulse" style="width: 100%"></div>
+               </div>
              </div>
            </div>
           
@@ -364,7 +412,7 @@ onUnmounted(() => {
                <img 
                  v-if="store.image.url"
                  :src="store.image.url"
-                 alt="预览图片"
+                 alt="宫格切割预览 - 微信朋友圈九宫格图片"
                  class="w-full h-full object-contain"
                  :style="{
                    filter: store.currentFilterConfig.cssFilter
@@ -893,7 +941,7 @@ onUnmounted(() => {
                <img 
                  v-if="store.image.url"
                  :src="store.image.url"
-                 alt="预览图片"
+                 alt="宫格切割预览 - 微信朋友圈九宫格图片"
                  class="w-full h-full object-contain"
                  :style="{
                    filter: store.currentFilterConfig.cssFilter
@@ -1101,6 +1149,33 @@ onUnmounted(() => {
       </div>
     </main>
     
+    <!-- 图片压缩进度指示器 -->
+    <ProgressIndicator
+      :visible="isOptimizing"
+      :progress="optimizationProgress"
+      :status="'正在压缩图片'"
+      :details="'智能压缩可以减小文件大小，提升加载速度'"
+      type="compression"
+      :show-actions="false"
+      :cancellable="false"
+      :auto-hide="true"
+      :auto-hide-delay="1500"
+    />
+    
+    <!-- 图片处理进度指示器 -->
+    <ProgressIndicator
+      :visible="isProcessing"
+      :progress="processingProgress"
+      :status="processingStatus"
+      :details="processingDetails"
+      :type="processingType"
+      :show-actions="false"
+      :cancellable="false"
+      :auto-hide="true"
+      :auto-hide-delay="2000"
+    />
+
+
 
   </div>
 </template>
